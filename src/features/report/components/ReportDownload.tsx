@@ -10,6 +10,11 @@ import { ReportAddressDialog } from "./ReportAddressDialog";
 export function ReportDownload(): ReactElement {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const handleChatbotClick = () => {
+    
+    window.location.href = "/chatbot";
+  };
+
   return (
     <ReportDownloadSection>
       <ReportDownloadButton
@@ -32,6 +37,21 @@ export function ReportDownload(): ReactElement {
           <path d="M5 17v3h14v-3" />
         </svg>
         보고서 다운로드
+      </ReportDownloadButton>
+
+      <ReportDownloadButton type="button" onClick={handleChatbotClick}>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+        </svg>
+        챗봇 이용하기
       </ReportDownloadButton>
 
       {isDialogOpen && (

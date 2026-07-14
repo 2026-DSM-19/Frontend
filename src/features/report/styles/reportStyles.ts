@@ -7,6 +7,9 @@ interface ErrorStyleProps {
 
 export const ReportDownloadSection = styled.div`
   margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 export const ReportDownloadButton = styled.button`
@@ -136,8 +139,7 @@ export const ReportSearchBox = styled.div<ErrorStyleProps>`
   align-items: center;
   height: 48px;
   padding: 0 7px 0 16px;
-  border: 1px solid
-    ${({ $hasError }) => ($hasError ? "#d45858" : "#ced4de")};
+  border: 1px solid ${({ $hasError }) => ($hasError ? "#d45858" : "#ced4de")};
   border-radius: 14px;
   background: white;
   box-shadow: 0 5px 18px rgba(24, 37, 58, 0.06);
