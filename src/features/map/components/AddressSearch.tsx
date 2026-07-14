@@ -29,7 +29,15 @@ export function AddressSearch({ focusPoint }: AddressSearchProps): ReactElement 
     handleSearchFocus,
     handleSearchBlur,
     handleChooseSearchResult,
-  } = useAddressSearch({ focusPoint });
+  } = useAddressSearch({
+    onResultSelect: (result) => {
+      focusPoint(result.point);
+    },
+    onSearchResults: (results) => {
+      const firstPoint = results[0]?.point;
+      if (firstPoint) focusPoint(firstPoint);
+    },
+  });
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>): void => {
     void handleSearch(event);

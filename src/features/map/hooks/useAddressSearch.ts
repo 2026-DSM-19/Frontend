@@ -3,10 +3,11 @@ import type { ChangeEvent, FocusEvent, SyntheticEvent } from "react";
 
 import { getErrorMessage } from "../../../shared/utils/errors";
 import { searchVWorld } from "../api/searchVWorld";
-import type { SearchPoint, SearchResultModel } from "../types/search";
+import type { SearchResultModel } from "../types/search";
 
 interface UseAddressSearchOptions {
-  focusPoint: (point: SearchPoint | null) => void;
+  onResultSelect?: (result: SearchResultModel) => void;
+  onSearchResults?: (results: readonly SearchResultModel[]) => void;
 }
 
 interface UseAddressSearchResult {
@@ -23,7 +24,8 @@ interface UseAddressSearchResult {
 }
 
 export function useAddressSearch({
-  focusPoint,
+  onResultSelect,
+  onSearchResults,
 }: UseAddressSearchOptions): UseAddressSearchResult {
   const selectedSearchTitleRef = useRef("");
   const [query, setQuery] = useState("");
@@ -95,7 +97,7 @@ export function useAddressSearch({
     try {
       const results = await searchVWorld(query);
       setSearchResults(results.slice(0, 6));
-      if (results[0]?.point) focusPoint(results[0].point);
+      onSearchResults?.(results);
       if (results.length === 0) setSearchError("검색 결과가 없습니다.");
     } catch (requestError: unknown) {
       setSearchResults([]);
@@ -106,7 +108,7 @@ export function useAddressSearch({
   };
 
   const handleChooseSearchResult = (result: SearchResultModel): void => {
-    focusPoint(result.point);
+    onResultSelect?.(result);
     selectedSearchTitleRef.current = result.title;
     setQuery(result.title);
     setSearchResults([]);
