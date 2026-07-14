@@ -11,7 +11,7 @@ export function createWebMercatorTileGrid(): TileGrid {
 
   return createXYZ({
     extent: projection.getExtent(),
-    maxZoom: 19,
+    maxZoom: 18,
     tileSize: 256,
   });
 }

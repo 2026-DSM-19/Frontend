@@ -11,7 +11,7 @@ export function createVWorldBaseLayer(
   return new TileLayer({
     source: new XYZ({
       attributions: "© 국토교통부 VWorld",
-      maxZoom: 19,
+      maxZoom: 18,
       tileSize: 256,
       tileUrlFunction: (tileCoord): string | undefined => {
         const [zoom, x, y] = tileCoord;

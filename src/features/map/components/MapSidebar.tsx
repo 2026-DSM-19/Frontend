@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { ReportDownload } from "../../report/components/ReportDownload";
 import {
   Logo,
   Sidebar,
@@ -42,6 +43,8 @@ export function MapSidebar({
         onToggleCrimeMenu={onToggleCrimeMenu}
         onClearSelection={onClearSelection}
       />
+
+      <ReportDownload />
 
       <SidebarCopyright>
         © {new Date().getFullYear()} Safe Scope. All rights reserved.

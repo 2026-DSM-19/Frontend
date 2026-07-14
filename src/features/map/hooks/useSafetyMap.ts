@@ -54,8 +54,8 @@ export function useSafetyMap({
           view: new View({
             center: fromLonLat([...DEFAULT_MAP_CENTER]),
             zoom: 18,
-            minZoom: 7,
-            maxZoom: 19,
+            minZoom: 9,
+            maxZoom: 22,
           }),
         });
         mapRef.current = map;
@@ -145,7 +145,7 @@ export function useSafetyMap({
 
     mapRef.current.getView().animate({
       center: fromLonLat([longitude, latitude]),
-      zoom: 16,
+      zoom: 18,
       duration: 550,
     });
   }, []);
