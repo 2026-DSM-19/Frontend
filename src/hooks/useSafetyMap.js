@@ -5,8 +5,24 @@ import View from "ol/View";
 import { fromLonLat } from "ol/proj";
 import { createSafeMapLayer } from "../utils/safeMapLayer";
 import { createVWorldBaseLayer } from "../utils/vWorldBaseLayer";
+import { createVWorldLandPriceLayer } from "../utils/vWorldLandPriceLayer";
 
 const DEFAULT_CENTER = [127.36307, 36.39151];
+const CRIME_LAYER_TYPES = new Set([
+  "all",
+  "theft",
+  "sexual-violence",
+  "violence",
+  "robbery",
+  "child-crime",
+  "senior-crime",
+]);
+
+function getOverlayZIndex(mapType, selectionIndex) {
+  if (mapType === "land-price") return 10;
+  if (CRIME_LAYER_TYPES.has(mapType)) return 20 + selectionIndex;
+  return 100 + selectionIndex;
+}
 
 export function useSafetyMap({ mapElementRef, selectedMapTypes = [] }) {
   const mapRef = useRef(null);
@@ -80,15 +96,20 @@ export function useSafetyMap({ mapElementRef, selectedMapTypes = [] }) {
 
       selectedMapTypes.forEach((mapType, index) => {
         if (layerEntries.has(mapType)) {
-          layerEntries.get(mapType).setZIndex(10 + index);
+          layerEntries.get(mapType).setZIndex(getOverlayZIndex(mapType, index));
           return;
         }
 
-        const layer = createSafeMapLayer(
-          import.meta.env.VITE_SAFE_MAP_API_TOKEN,
-          mapType,
-        );
-        layer.setZIndex(10 + index);
+        const layer =
+          mapType === "land-price"
+            ? createVWorldLandPriceLayer(
+                import.meta.env.VITE_V_WORLD_API_TOKEN,
+              )
+            : createSafeMapLayer(
+                import.meta.env.VITE_SAFE_MAP_API_TOKEN,
+                mapType,
+              );
+        layer.setZIndex(getOverlayZIndex(mapType, index));
         layerEntries.set(mapType, layer);
         map.addLayer(layer);
       });

@@ -21,6 +21,7 @@ const MAIN_OPTIONS = [
   { id: "flood-trace", label: "침수", icon: "flood" },
   { id: "cctv", label: "CCTV", icon: "cctv" },
   { id: "police-facility", label: "치안센터", icon: "police" },
+  { id: "land-price", label: "공시지가", icon: "land-price" },
 ];
 
 const Page = styled.main`
@@ -439,6 +440,9 @@ function MenuIcon({ type }) {
       )}
       {type === "crime" && (
         <path d="M7 4h10v4H7zM9 8v12m6-12v12M6 20h12M5 8h14M9 13h6" />
+      )}
+      {type === "land-price" && (
+        <path d="M4 5.5 9 3l6 2.5L20 3v15.5L15 21l-6-2.5L4 21zM9 3v15.5m6-13V21M11.5 9.5h1.8a1.7 1.7 0 0 1 0 3.4h-1.6a1.7 1.7 0 0 0 0 3.4h1.8" />
       )}
       {type === "flood" && (
         <path d="M3 8h18M5 4h14M4 13c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5M4 18c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5" />
