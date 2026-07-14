@@ -1,12 +1,16 @@
 import TileLayer from "ol/layer/Tile";
-import { get as getProjection } from "ol/proj";
 import TileImage from "ol/source/TileImage";
-import { createXYZ } from "ol/tilegrid";
+
+import type { SafeMapLayerConfig, SafeMapLayerType } from "../types/map";
+import { createWebMercatorTileGrid } from "./createWebMercatorTileGrid";
 
 const DEFAULT_CRIME_LAYER = "A2SM_CRMNLHSPOT_TOT";
-export const SAFE_MAP_OPACITY = 0.72;
 
-export const SAFE_MAP_LAYER_CONFIG = Object.freeze({
+const SAFE_MAP_OPACITY = 0.72;
+
+const SAFE_MAP_LAYER_CONFIG: Readonly<
+  Record<SafeMapLayerType, SafeMapLayerConfig>
+> = Object.freeze({
   all: {
     title: "범죄주의구간 전체",
     endpoint: "IF_0087_WMS",
@@ -93,35 +97,33 @@ export const SAFE_MAP_LAYER_CONFIG = Object.freeze({
   },
 });
 
-export function getSafeMapLayerConfig(mapType) {
-  const config = SAFE_MAP_LAYER_CONFIG[mapType];
+function isSafeMapLayerType(mapType: string): mapType is SafeMapLayerType {
+  return Object.hasOwn(SAFE_MAP_LAYER_CONFIG, mapType);
+}
 
-  if (!config) {
+function getSafeMapLayerConfig(mapType: string): SafeMapLayerConfig {
+  if (!isSafeMapLayerType(mapType)) {
     throw new Error(`지원하지 않는 생활안전지도 유형입니다: ${mapType}`);
   }
 
-  return config;
+  return SAFE_MAP_LAYER_CONFIG[mapType];
 }
 
-export function createSafeMapLayer(serviceKey, mapType = "all") {
+export function createSafeMapLayer(
+  serviceKey: string | undefined,
+  mapType: SafeMapLayerType = "all",
+): TileLayer<TileImage> {
   if (!serviceKey) {
     throw new Error("생활안전지도 API 키가 설정되지 않았습니다.");
   }
 
   const config = getSafeMapLayerConfig(mapType);
-  const tileGrid = createXYZ({
-    extent: getProjection("EPSG:3857").getExtent(),
-    maxZoom: 19,
-    tileSize: 256,
-  });
-
+  const tileGrid = createWebMercatorTileGrid();
   const source = new TileImage({
     attributions: `© ${config.provider} · 생활안전지도 · ${config.title}`,
     projection: "EPSG:3857",
     tileGrid,
-    tileUrlFunction: (tileCoord) => {
-      if (!tileCoord) return undefined;
-
+    tileUrlFunction: (tileCoord): string | undefined => {
       const extent = tileGrid.getTileCoordExtent(tileCoord);
       const params = new URLSearchParams({
         serviceKey,

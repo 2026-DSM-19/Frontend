@@ -1,7 +1,9 @@
+import type { ReactElement } from "react";
 import { Navigate, Route, Routes } from "react-router";
-import MapPage from "./pages/map";
 
-function App() {
+import MapPage from "../pages/MapPage";
+
+function App(): ReactElement {
   return (
     <Routes>
       <Route path="/" element={<MapPage />} />
