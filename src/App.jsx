@@ -1,13 +1,12 @@
-import Layout from "./layout";
+import { Navigate, Route, Routes } from "react-router";
+import MapPage from "./pages/map";
 
 function App() {
   return (
-    <Layout>
-      <div>
-        <h1>Welcome to the App!</h1>
-        <p>This is the main content of the application.</p>
-      </div>
-    </Layout>
+    <Routes>
+      <Route path="/" element={<MapPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
