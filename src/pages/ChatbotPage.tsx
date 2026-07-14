@@ -237,6 +237,9 @@ interface ChatMessage {
   text: string;
 }
 
+const toMessageText = (value: unknown) =>
+  typeof value === "string" ? value : "";
+
 function Chatbot() {
   const [input, setInput] = useState("");
 
@@ -281,7 +284,7 @@ function Chatbot() {
         ...prev,
         {
           sender: "bot",
-          text: res.message,
+          text: toMessageText(res.message),
         },
       ]);
     } catch (err) {
@@ -315,9 +318,11 @@ function Chatbot() {
               <Icon>{msg.sender === "bot" ? "🤖" : "👤"}</Icon>
 
               <Bubble>
-                {msg.text.split("\n").map((line, i) => (
-                  <div key={i}>{line}</div>
-                ))}
+                {toMessageText(msg.text)
+                  .split("\n")
+                  .map((line, i) => (
+                    <div key={i}>{line}</div>
+                  ))}
               </Bubble>
             </Message>
           ))}

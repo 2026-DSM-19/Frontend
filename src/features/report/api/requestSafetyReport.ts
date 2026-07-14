@@ -105,7 +105,7 @@ export async function requestSafetyReport(
   options: ReportRequestOptions = {},
 ): Promise<ReportFile> {
   const request: AnalyzeReportRequest = { address };
-  const requestInit: RequestInit = {
+  const requestInit: RequestInit = {  
     method: "POST",
     headers: {
       "Content-Type": "application/json",
