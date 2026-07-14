@@ -1,6 +1,7 @@
 import type { ReactElement, SyntheticEvent } from "react";
 
 import { useAddressSearch } from "../hooks/useAddressSearch";
+import type { SearchResultModel } from "../types/search";
 import {
   SearchBox,
   SearchButton,
@@ -14,10 +15,18 @@ import {
 import type { SearchPoint } from "../types/search";
 
 interface AddressSearchProps {
-  focusPoint: (point: SearchPoint | null) => void;
+  focusPoint?: (point: SearchPoint | null) => void;
+  onResultSelect?: (result: SearchResultModel) => void;
 }
 
-export function AddressSearch({ focusPoint }: AddressSearchProps): ReactElement {
+function getResultAddress(result: SearchResultModel): string {
+  return result.roadAddress || result.parcelAddress || result.title;
+}
+
+export function AddressSearch({
+  focusPoint,
+  onResultSelect,
+}: AddressSearchProps): ReactElement {
   const {
     query,
     searchResults,
@@ -31,11 +40,12 @@ export function AddressSearch({ focusPoint }: AddressSearchProps): ReactElement 
     handleChooseSearchResult,
   } = useAddressSearch({
     onResultSelect: (result) => {
-      focusPoint(result.point);
+      focusPoint?.(result.point);
+      onResultSelect?.(result);
     },
     onSearchResults: (results) => {
       const firstPoint = results[0]?.point;
-      if (firstPoint) focusPoint(firstPoint);
+      if (firstPoint) focusPoint?.(firstPoint);
     },
   });
 
@@ -77,7 +87,7 @@ export function AddressSearch({ focusPoint }: AddressSearchProps): ReactElement 
                 }}
               >
                 <strong>{result.title}</strong>
-                <small>{result.roadAddress || result.parcelAddress}</small>
+                <small>{getResultAddress(result)}</small>
               </SearchResult>
             ))}
           </SearchResults>
