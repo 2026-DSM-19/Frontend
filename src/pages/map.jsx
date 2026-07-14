@@ -1,6 +1,6 @@
 import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useSafetyMap } from "../hooks/useSafetyMap";
 import { addSearch } from "../utils/AddSearch";
@@ -41,6 +41,8 @@ const Page = styled.main`
 const Sidebar = styled.aside`
   position: relative;
   z-index: 40;
+  display: flex;
+  flex-direction: column;
   flex: 0 0 292px;
   height: 100%;
   overflow-y: auto;
@@ -77,6 +79,11 @@ const Logo = styled(Link)`
   letter-spacing: -0.04em;
   text-decoration: none;
 
+  img {
+    width: 220px;
+    height: auto;
+  }
+
   span:first-of-type {
     color: #15181d;
   }
@@ -84,19 +91,11 @@ const Logo = styled(Link)`
   @media (max-width: 640px) {
     margin-bottom: 22px;
     font-size: 1.2rem;
-  }
-`;
 
-const LogoMark = styled.span`
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 12px 12px 16px 16px;
-  color: white !important;
-  background: linear-gradient(145deg, #3677f2, #174bbd);
-  box-shadow: 0 7px 16px rgba(32, 91, 211, 0.24);
-  font-size: 0.96rem;
+    img {
+      width: 190px;
+    }
+  }
 `;
 
 const SectionLabel = styled.label`
@@ -258,6 +257,15 @@ const Menu = styled.nav`
   gap: 6px;
 `;
 
+const SidebarCopyright = styled.p`
+  margin-top: auto;
+  padding: 30px 6px 2px;
+  color: #8b919a;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  text-align: center;
+`;
+
 const MenuButton = styled.button`
   display: flex;
   width: 100%;
@@ -325,7 +333,8 @@ const CrimeChoice = styled.button`
   border: 0;
   border-radius: 9px;
   color: ${({ $active }) => ($active ? "#174dbb" : "#353940")};
-  background: ${({ $active }) => ($active ? "rgba(255,255,255,.9)" : "transparent")};
+  background: ${({ $active }) =>
+    $active ? "rgba(255,255,255,.9)" : "transparent"};
   font: inherit;
   font-size: 0.81rem;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
@@ -363,27 +372,6 @@ const MapCanvas = styled.div`
   width: 100%;
   height: 100%;
   background: #d8e1ea;
-`;
-
-const LayerCount = styled.div`
-  position: absolute;
-  z-index: 20;
-  top: 20px;
-  right: 20px;
-  padding: 9px 13px;
-  color: #30343a;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(32, 48, 70, 0.1);
-  border-radius: 20px;
-  box-shadow: 0 8px 22px rgba(30, 42, 62, 0.12);
-  backdrop-filter: blur(8px);
-  font-size: 0.75rem;
-  font-weight: 700;
-
-  @media (max-width: 640px) {
-    top: 12px;
-    right: 12px;
-  }
 `;
 
 const Status = styled.div`
@@ -436,38 +424,124 @@ function MenuIcon({ type }) {
   };
 
   return (
-    <svg width="25" height="25" viewBox="0 0 24 24" aria-hidden="true" {...common}>
-      {type === "light" && <path d="M9 21h6M10 17h4M8.7 14.5a6 6 0 1 1 6.6 0c-.9.7-1.3 1.4-1.3 2.5h-4c0-1.1-.4-1.8-1.3-2.5Z" />}
-      {type === "traffic" && <path d="M8 3h8v18H8zM5 7H3m2 5H3m2 5H3m16-10h-2m2 5h-2m2 5h-2M12 7v10m-2-5h4" />}
-      {type === "crime" && <path d="M7 4h10v4H7zM9 8v12m6-12v12M6 20h12M5 8h14M9 13h6" />}
-      {type === "flood" && <path d="M3 8h18M5 4h14M4 13c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5M4 18c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5" />}
-      {type === "cctv" && <path d="m4 8 12-3 1 5-12 3zM17 7l3 1v5l-3-1M10 12v5m-3 3h6m-3-3-3 3m3-3 3 3" />}
-      {type === "police" && <path d="M4 9h16M6 9v10m12-10v10M3 20h18M12 3l9 5H3zM9 13h6" />}
+    <svg
+      width="25"
+      height="25"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      {...common}
+    >
+      {type === "light" && (
+        <path d="M9 21h6M10 17h4M8.7 14.5a6 6 0 1 1 6.6 0c-.9.7-1.3 1.4-1.3 2.5h-4c0-1.1-.4-1.8-1.3-2.5Z" />
+      )}
+      {type === "traffic" && (
+        <path d="M8 3h8v18H8zM5 7H3m2 5H3m2 5H3m16-10h-2m2 5h-2m2 5h-2M12 7v10m-2-5h4" />
+      )}
+      {type === "crime" && (
+        <path d="M7 4h10v4H7zM9 8v12m6-12v12M6 20h12M5 8h14M9 13h6" />
+      )}
+      {type === "flood" && (
+        <path d="M3 8h18M5 4h14M4 13c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5M4 18c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5" />
+      )}
+      {type === "cctv" && (
+        <path d="m4 8 12-3 1 5-12 3zM17 7l3 1v5l-3-1M10 12v5m-3 3h6m-3-3-3 3m3-3 3 3" />
+      )}
+      {type === "police" && (
+        <path d="M4 9h16M6 9v10m12-10v10M3 20h18M12 3l9 5H3zM9 13h6" />
+      )}
     </svg>
   );
 }
 
-function MapPage({ mapType = "all" }) {
+function MapPage() {
   const mapElementRef = useRef(null);
-  const [selectedMapTypes, setSelectedMapTypes] = useState(() => [mapType]);
-  const [crimeOpen, setCrimeOpen] = useState(() =>
-    CRIME_OPTIONS.some(({ id }) => id === mapType),
-  );
+  const selectedSearchTitleRef = useRef("");
+  const [selectedMapTypes, setSelectedMapTypes] = useState([]);
+  const [crimeOpen, setCrimeOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchError, setSearchError] = useState("");
   const [searching, setSearching] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const { status, error, focusPoint } = useSafetyMap({
     mapElementRef,
     selectedMapTypes,
   });
 
+  useEffect(() => {
+    const keyword = query.trim();
+
+    if (!searchFocused || keyword.length < 2) return;
+
+    if (selectedSearchTitleRef.current === keyword) {
+      selectedSearchTitleRef.current = "";
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const loadSuggestions = async () => {
+        setSearching(true);
+        setSearchError("");
+
+        try {
+          const results = await addSearch(keyword, {
+            signal: controller.signal,
+          });
+
+          if (!controller.signal.aborted) {
+            setSearchResults(results.slice(0, 6));
+            if (results.length === 0) {
+              setSearchError("검색 결과가 없습니다.");
+            }
+          }
+        } catch (requestError) {
+          if (!controller.signal.aborted) {
+            setSearchResults([]);
+            setSearchError(
+              requestError.message || "자동완성 검색에 실패했습니다.",
+            );
+          }
+        } finally {
+          if (!controller.signal.aborted) setSearching(false);
+        }
+      };
+
+      loadSuggestions();
+    }, 350);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, searchFocused]);
+
   const toggleLayer = (mapLayerType) => {
-    setSelectedMapTypes((current) =>
-      current.includes(mapLayerType)
+    setSelectedMapTypes((current) => {
+      const isCrimeLayer = CRIME_OPTIONS.some(({ id }) => id === mapLayerType);
+
+      if (mapLayerType === "all") {
+        const withoutCrimeLayers = current.filter(
+          (item) => !CRIME_OPTIONS.some(({ id }) => id === item),
+        );
+
+        return current.includes("all")
+          ? withoutCrimeLayers
+          : [...withoutCrimeLayers, "all"];
+      }
+
+      if (isCrimeLayer) {
+        const withoutCrimeAll = current.filter((item) => item !== "all");
+
+        return withoutCrimeAll.includes(mapLayerType)
+          ? withoutCrimeAll.filter((item) => item !== mapLayerType)
+          : [...withoutCrimeAll, mapLayerType];
+      }
+
+      return current.includes(mapLayerType)
         ? current.filter((item) => item !== mapLayerType)
-        : [...current, mapLayerType],
-    );
+        : [...current, mapLayerType];
+    });
   };
 
   const handleSearch = async (event) => {
@@ -491,8 +565,27 @@ function MapPage({ mapType = "all" }) {
 
   const chooseSearchResult = (result) => {
     focusPoint(result.point);
+    selectedSearchTitleRef.current = result.title;
     setQuery(result.title);
     setSearchResults([]);
+  };
+
+  const handleQueryChange = (event) => {
+    const nextQuery = event.target.value;
+    selectedSearchTitleRef.current = "";
+    setQuery(nextQuery);
+    setSearchError("");
+
+    if (nextQuery.trim().length < 2) {
+      setSearchResults([]);
+    }
+  };
+
+  const handleSearchBlur = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setSearchFocused(false);
+      setSearchResults([]);
+    }
   };
 
   const crimeSelected = CRIME_OPTIONS.some(({ id }) =>
@@ -503,25 +596,30 @@ function MapPage({ mapType = "all" }) {
     <Page>
       <Sidebar>
         <Logo to="/" aria-label="Safe Scope 홈으로 이동">
-          <LogoMark>S</LogoMark>
-          <span>Safe</span> Scope
+          <img src="/logo.svg" alt="" />
         </Logo>
 
         <SectionLabel htmlFor="map-address-search">주소 검색</SectionLabel>
-        <SearchForm onSubmit={handleSearch}>
+        <SearchForm onSubmit={handleSearch} onBlur={handleSearchBlur}>
           <SearchBox $hasError={Boolean(searchError)}>
             <SearchInput
               id="map-address-search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={handleQueryChange}
+              onFocus={() => setSearchFocused(true)}
               placeholder="장소 또는 주소를 입력하세요"
               autoComplete="off"
+              aria-expanded={searchFocused && searchResults.length > 0}
             />
-            <SearchButton type="submit" aria-label="주소 검색" disabled={searching}>
+            <SearchButton
+              type="submit"
+              aria-label="주소 검색"
+              disabled={searching}
+            >
               {searching ? "…" : "⌕"}
             </SearchButton>
           </SearchBox>
-          {searchResults.length > 0 && (
+          {searchFocused && searchResults.length > 0 && (
             <SearchResults>
               {searchResults.map((result) => (
                 <SearchResult
@@ -535,7 +633,9 @@ function MapPage({ mapType = "all" }) {
               ))}
             </SearchResults>
           )}
-          {searchError && <SearchMessage role="alert">{searchError}</SearchMessage>}
+          {searchError && (
+            <SearchMessage role="alert">{searchError}</SearchMessage>
+          )}
         </SearchForm>
 
         <LayerMenuHeader>
@@ -545,7 +645,7 @@ function MapPage({ mapType = "all" }) {
             disabled={selectedMapTypes.length === 0}
             onClick={() => setSelectedMapTypes([])}
           >
-            선택 전체 해제
+            전체 선택 해제
           </ClearSelectionButton>
         </LayerMenuHeader>
 
@@ -560,7 +660,9 @@ function MapPage({ mapType = "all" }) {
                 aria-pressed={active}
                 onClick={() => toggleLayer(item.id)}
               >
-                <IconWrap><MenuIcon type={item.icon} /></IconWrap>
+                <IconWrap>
+                  <MenuIcon type={item.icon} />
+                </IconWrap>
                 {item.label}
                 <ChoiceIndicator $active={active} />
               </MenuButton>
@@ -573,7 +675,9 @@ function MapPage({ mapType = "all" }) {
             aria-expanded={crimeOpen}
             onClick={() => setCrimeOpen((open) => !open)}
           >
-            <IconWrap><MenuIcon type="crime" /></IconWrap>
+            <IconWrap>
+              <MenuIcon type="crime" />
+            </IconWrap>
             범죄
             <Chevron $open={crimeOpen}>⌃</Chevron>
           </MenuButton>
@@ -607,20 +711,28 @@ function MapPage({ mapType = "all" }) {
                 aria-pressed={active}
                 onClick={() => toggleLayer(item.id)}
               >
-                <IconWrap><MenuIcon type={item.icon} /></IconWrap>
+                <IconWrap>
+                  <MenuIcon type={item.icon} />
+                </IconWrap>
                 {item.label}
                 <ChoiceIndicator $active={active} />
               </MenuButton>
             );
           })}
         </Menu>
+
+        <SidebarCopyright>
+          © {new Date().getFullYear()} Safe Scope. All rights reserved.
+        </SidebarCopyright>
       </Sidebar>
 
       <MapShell>
         <MapCanvas ref={mapElementRef} />
-        <LayerCount>선택 레이어 {selectedMapTypes.length}개</LayerCount>
         {status !== "ready" && (
-          <Status $error={status === "error"} role={status === "error" ? "alert" : "status"}>
+          <Status
+            $error={status === "error"}
+            role={status === "error" ? "alert" : "status"}
+          >
             {status === "error" ? (
               error
             ) : (

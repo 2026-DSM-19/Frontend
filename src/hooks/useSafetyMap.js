@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import OlMap from "ol/Map";
+import { unByKey } from "ol/Observable";
 import View from "ol/View";
 import { fromLonLat } from "ol/proj";
 import { createSafeMapLayer } from "../utils/safeMapLayer";
 import { createVWorldBaseLayer } from "../utils/vWorldBaseLayer";
 
-const SEOUL_CENTER = [126.978, 37.5665];
+const DEFAULT_CENTER = [127.36307, 36.39151];
 
 export function useSafetyMap({ mapElementRef, selectedMapTypes = [] }) {
   const mapRef = useRef(null);
@@ -29,14 +30,14 @@ export function useSafetyMap({ mapElementRef, selectedMapTypes = [] }) {
           target: mapElementRef.current,
           layers: [baseLayer],
           view: new View({
-            center: fromLonLat(SEOUL_CENTER),
-            zoom: 11,
+            center: fromLonLat(DEFAULT_CENTER),
+            zoom: 18,
             minZoom: 7,
             maxZoom: 19,
           }),
         });
         mapRef.current = map;
-        setStatus("ready");
+        setStatus("loading");
       } catch (mapError) {
         setError(mapError.message || "지도를 불러오지 못했습니다.");
         setStatus("error");
@@ -54,33 +55,53 @@ export function useSafetyMap({ mapElementRef, selectedMapTypes = [] }) {
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || status !== "ready") return;
+    if (!map) return;
 
-    const selected = new Set(selectedMapTypes);
-    const layerEntries = overlayLayersRef.current;
+    let renderCompleteKey;
 
-    layerEntries.forEach((layer, mapType) => {
-      if (!selected.has(mapType)) {
-        map.removeLayer(layer);
-        layerEntries.delete(mapType);
-      }
-    });
+    const finishLoading = () => {
+      setStatus("ready");
+    };
 
-    selectedMapTypes.forEach((mapType, index) => {
-      if (layerEntries.has(mapType)) {
-        layerEntries.get(mapType).setZIndex(10 + index);
-        return;
-      }
+    const syncLayers = () => {
+      setStatus("loading");
 
-      const layer = createSafeMapLayer(
-        import.meta.env.VITE_SAFE_MAP_API_TOKEN,
-        mapType,
-      );
-      layer.setZIndex(10 + index);
-      layerEntries.set(mapType, layer);
-      map.addLayer(layer);
-    });
-  }, [selectedMapTypes, status]);
+      renderCompleteKey = map.once("rendercomplete", finishLoading);
+
+      const selected = new Set(selectedMapTypes);
+      const layerEntries = overlayLayersRef.current;
+
+      layerEntries.forEach((layer, mapType) => {
+        if (!selected.has(mapType)) {
+          map.removeLayer(layer);
+          layerEntries.delete(mapType);
+        }
+      });
+
+      selectedMapTypes.forEach((mapType, index) => {
+        if (layerEntries.has(mapType)) {
+          layerEntries.get(mapType).setZIndex(10 + index);
+          return;
+        }
+
+        const layer = createSafeMapLayer(
+          import.meta.env.VITE_SAFE_MAP_API_TOKEN,
+          mapType,
+        );
+        layer.setZIndex(10 + index);
+        layerEntries.set(mapType, layer);
+        map.addLayer(layer);
+      });
+
+      map.render();
+    };
+
+    syncLayers();
+
+    return () => {
+      if (renderCompleteKey) unByKey(renderCompleteKey);
+    };
+  }, [selectedMapTypes]);
 
   const focusPoint = useCallback((point) => {
     const longitude = Number(point?.x);

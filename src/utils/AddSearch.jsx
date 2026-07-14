@@ -47,7 +47,7 @@ export async function addSearch(query, { signal } = {}) {
     throw new Error("VWorld API 키가 설정되지 않았습니다.");
   }
 
-  const responses = await Promise.all(
+  const responses = await Promise.allSettled(
     SEARCH_TARGETS.map(async ({ type, category }) => {
       const params = new URLSearchParams({
         service: "search",
@@ -81,5 +81,26 @@ export async function addSearch(query, { signal } = {}) {
     }),
   );
 
-  return responses.flat();
+  const fulfilledResponses = responses.filter(
+    (result) => result.status === "fulfilled",
+  );
+  const successfulResults = fulfilledResponses.flatMap(
+    (result) => result.value,
+  );
+
+  if (fulfilledResponses.length === 0) {
+    const firstFailure = responses.find((result) => result.status === "rejected");
+    throw firstFailure?.reason || new Error("VWorld 검색 요청에 실패했습니다.");
+  }
+
+  return successfulResults.filter(
+    (result, index, allResults) =>
+      index ===
+      allResults.findIndex(
+        (candidate) =>
+          candidate.title === result.title &&
+          candidate.point?.x === result.point?.x &&
+          candidate.point?.y === result.point?.y,
+      ),
+  );
 }
