@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
+import { useEffect, useState } from "react";
 
 import { AddressSearch } from "../features/map/components/AddressSearch";
 import type { SearchResultModel } from "../features/map/types/search";
@@ -133,6 +134,47 @@ const Bubble = styled.div`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 `;
 
+const loadingPulse = keyframes`
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+`;
+
+const LoadingBubble = styled(Bubble)`
+  min-width: 120px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #5e6879;
+`;
+
+const LoadingDots = styled.span`
+  display: inline-flex;
+  gap: 4px;
+
+  span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #12365c;
+    animation: ${loadingPulse} 1.1s infinite ease-in-out;
+  }
+
+  span:nth-of-type(2) {
+    animation-delay: 0.15s;
+  }
+
+  span:nth-of-type(3) {
+    animation-delay: 0.3s;
+  }
+`;
+
 const Recommend = styled.div`
   padding: 20px;
   display: flex;
@@ -186,29 +228,77 @@ interface ChatMessage {
   response?: string;
 }
 
+interface PersistedChatState {
+  address: string;
+  messages: ChatMessage[];
+}
+
 const toMessageText = (value: unknown) =>
   typeof value === "string" ? value : "";
 
 const getResultAddress = (result: SearchResultModel): string =>
   result.roadAddress || result.parcelAddress || result.title;
 
-function Chatbot() {
-  const [address, setAddress] = useState("");
-  const [input, setInput] = useState("");
+const CHATBOT_STORAGE_KEY = "safe-scope-chatbot-state";
+const INITIAL_MESSAGES: ChatMessage[] = [
+  {
+    sender: "bot",
+    text: "안녕하세요 👋\nSafe Scope AI입니다.\n주소를 입력하면 주변 위험 정보를 분석해드립니다.",
+  },
+];
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      sender: "bot",
-      text: "안녕하세요 👋\nSafe Scope AI입니다.\n주소를 입력하면 주변 위험 정보를 분석해드립니다.",
-    },
-  ]);
+const isPersistedChatState = (value: unknown): value is PersistedChatState => {
+  if (!value || typeof value !== "object") return false;
+
+  const maybeState = value as PersistedChatState;
+  return (
+    Array.isArray(maybeState.messages) && typeof maybeState.address === "string"
+  );
+};
+
+const readPersistedChatState = (): PersistedChatState | null => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const rawValue = window.localStorage.getItem(CHATBOT_STORAGE_KEY);
+    if (!rawValue) return null;
+
+    const parsedValue: unknown = JSON.parse(rawValue);
+    if (!isPersistedChatState(parsedValue)) return null;
+
+    return parsedValue;
+  } catch {
+    return null;
+  }
+};
+
+function Chatbot() {
+  const [address, setAddress] = useState(
+    () => readPersistedChatState()?.address ?? "",
+  );
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const persistedState = readPersistedChatState();
+    return persistedState?.messages ?? INITIAL_MESSAGES;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem(
+      CHATBOT_STORAGE_KEY,
+      JSON.stringify({ address, messages }),
+    );
+  }, [address, messages]);
 
   const handleAddressSelect = (result: SearchResultModel): void => {
     setAddress(getResultAddress(result));
   };
 
   const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isLoading) return;
 
     if (!address.trim()) {
       setMessages((prev) => [
@@ -222,6 +312,7 @@ function Chatbot() {
     }
 
     // 사용자 메시지 추가
+    setIsLoading(true);
     setMessages((prev) => [
       ...prev,
       {
@@ -262,6 +353,15 @@ function Chatbot() {
       ]);
     } catch (err) {
       console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: "응답을 가져오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -285,7 +385,7 @@ function Chatbot() {
             </HeaderTitle>
           </HeaderLeft>
 
-          <Status>● Online</Status>
+          <Status>{isLoading ? "● 응답 대기중" : "● Online"}</Status>
         </ChatHeader>
 
         <AddressSection>
@@ -313,10 +413,26 @@ function Chatbot() {
               </Bubble>
             </Message>
           ))}
+
+          {isLoading && (
+            <Message>
+              <Icon>🤖</Icon>
+
+              <LoadingBubble aria-live="polite" aria-label="응답을 기다리는 중">
+                <span>답변 생성중</span>
+                <LoadingDots aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </LoadingDots>
+              </LoadingBubble>
+            </Message>
+          )}
         </ChatArea>
 
         <Recommend>
           <RecommendButton
+            disabled={isLoading}
             onClick={() => {
               void sendMessage("이 주소 안전한가요?");
             }}
@@ -325,6 +441,7 @@ function Chatbot() {
           </RecommendButton>
 
           <RecommendButton
+            disabled={isLoading}
             onClick={() => {
               void sendMessage("CCTV 확인해주세요");
             }}
@@ -333,6 +450,7 @@ function Chatbot() {
           </RecommendButton>
 
           <RecommendButton
+            disabled={isLoading}
             onClick={() => {
               void sendMessage("범죄 위험 확인해주세요");
             }}
@@ -341,6 +459,7 @@ function Chatbot() {
           </RecommendButton>
 
           <RecommendButton
+            disabled={isLoading}
             onClick={() => {
               void sendMessage("침수 위험 확인해주세요");
             }}
@@ -353,6 +472,7 @@ function Chatbot() {
           <Input
             value={input}
             placeholder="주소 또는 질문을 입력하세요"
+            disabled={isLoading}
             onChange={(e) => {
               setInput(e.target.value);
             }}
@@ -364,6 +484,7 @@ function Chatbot() {
           />
 
           <SendButton
+            disabled={isLoading}
             onClick={() => {
               void sendMessage(input);
             }}
